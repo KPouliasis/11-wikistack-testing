@@ -1,6 +1,7 @@
 const expect = require('chai').expect;
 const Page = require('../models').Page;
 
+
 describe('Page model', function () {
 
   describe('Test spec Page requiring', function(){
@@ -28,15 +29,62 @@ describe('Page model', function () {
   });
 
   describe('Class methods', function () {
+
+    beforeEach(function(){
+      return Page.sync({force: true})
+      .then (function(){
+        return Page.create({
+        title: 'Required',
+        content : 'Cant be none',
+        tags : ['one','two', 'three']
+        })
+      }
+    )});
     describe('findByTag', function () {
-      it('gets pages with the search tag');
-      it('does not get pages without the search tag');
+      it('gets pages with the search tag',function(){
+        return Page.findByTag('one').
+        then(function(pages){
+          expect(pages.length).to.equal(1)
+        })
+        .catch(console.error)
+      });
+      it('does not get pages without the search tag', function(){
+        return Page.findByTag('four').
+        then(function(pages){
+          expect(pages.length).to.equal(0)
+        })
+        .catch(console.log)
+      });
     });
   });
 
   describe('Instance methods', function () {
+    beforeEach(function(){
+      return Page.sync({force: true})
+      .then (function(){
+        return Page.create({
+        title: 'Required',
+        content : 'Cant be none',
+        tags : ['one','two', 'three']
+        })
+      }
+    ).then(() => Page.create({title: 'Another', content : 'Stuff',
+                              tags: ['one']}))
+     .catch(console.error)
+    });
     describe('findSimilar', function () {
-      it('never gets itself');
+      it('never gets itself', function(){
+        let page;
+        return Page.findByTag('one')
+        .then(function(results){
+          page = results[0];
+          return page.findSimilar()
+        })
+        .then(function(resultsOfSimilar){
+          console.log(resultsOfSimilar.length);
+          expect(resultsOfSimilar).not.to.contain(page)
+        })
+      });
       it('gets other pages with any common tags');
       it('does not get other pages without any common tags');
     });
